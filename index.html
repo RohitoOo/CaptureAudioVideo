@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- load MUI -->
+<link href="//cdn.muicss.com/mui-0.10.0/css/mui.min.css" rel="stylesheet" type="text/css" />
+<script src="//cdn.muicss.com/mui-0.10.0/js/mui.min.js"></script>
+<script>
+
+    let constrainObj = {
+        audio: true,
+        video: {
+            facingMode: "user",
+            length: "auto",
+            width: "auto"
+        }
+    }
+
+    navigator.mediaDevices.getUserMedia(constrainObj)
+        .then((mediaStreamObj) => {
+            // Connect the media stream to the first video element
+            let video = document.querySelector('video')
+            if ('srcObject' in video) {
+                video.srcObject = mediaStreamObj
+
+            } else {
+                // Older Browsers
+                video.src = window.URL.createObjectURL(mediaStreamObj)
+            }
+
+            video.onloadedmetadata = () => {
+                // Show in the Video Element, whatever is being captured by the webcam
+                video.play()
+            }
+
+            // Event Listeners to Save Video/Audio 
+
+            let start = document.getElementById('btnStart')
+            let stop = document.getElementById('btnStop')
+            let vidSave = document.getElementById('vid2')
+            // Record from Connected Stream
+            let mediaRecorder = new MediaRecorder(mediaStreamObj)
+            // Save Video in this array ( chunks )
+            let chunks = []
+
+            start.addEventListener('click', (ev) => {
+                mediaRecorder.start();
+                console.log(mediaRecorder.state)
+            })
+
+            stop.addEventListener('click', (ev) => {
+                mediaRecorder.stop();
+                console.log(mediaRecorder.state)
+            })
+            mediaRecorder.ondataavailable = (ev) => {
+                chunks.push(ev.data)
+            }
+            // After Stop Recording is Fired
+            mediaRecorder.onstop = (ev) => {
+                let blob = new Blob(chunks, {type : 'video/mp4' })
+                chunks = []
+                let videoURL = window.URL.createObjectURL(blob)
+                vidSave.src = videoURL
+            }
+        }).catch( (err) => {
+            console.log(err.message)
+        })
+
+</script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Audio Video Recorder</title>
+</head>
+
+<body>
+
+    <div class="mui-container">
+        <div class="mui-panel" class="mui--text-center">
+            <h1>Capture Audio & Video</h1>
+            <button class="mui-btn mui-btn--primary mui-btn--raised" id="btnStart" >Start Recording</button>
+            <button class="mui-btn mui-btn--danger mui-btn--raised" id="btnStop">Stop Recording</button>
+
+        </div>
+
+        <video controls width="100%"></video>
+        <video id="vid2" controls width="100%"></video>
+    </div>
+
+</body>
+
+</html>
